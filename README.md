@@ -36,12 +36,3 @@ npm run dev
   (`LAYOUT_CONFIG` density floor), they carry generic signs, and they are
   never presented as directories.
 
-## Future ideas
-
-- **Interior lakes + bridges**: scatter 1–3 small hash-deterministic lakes on
-  larger islands, with simple original bridge decks where roads cross them.
-  Deferred deliberately: roads currently never cross water, and carving lakes
-  through district interiors touches the terrain classifier, lot placement,
-  and the routing-graph gate that Phase 2B traffic depends on. Attempt after
-  traffic is stable.
-- Era chrome UI, left toolbar, minimap, Planning Report window (Phase 3).
