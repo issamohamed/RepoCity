@@ -1,0 +1,566 @@
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+}
+
+#app {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center; /* letterbox bars around the fixed-aspect canvas */
+}
+
+#app canvas {
+  display: block;
+  /* Belt and braces: keep upscaling crisp if the browser ever scales the canvas. */
+  image-rendering: pixelated;
+}
+
+#hud {
+  position: fixed;
+  left: 8px;
+  bottom: 8px;
+  color: #d9d9d0;
+  font: 12px monospace;
+  text-shadow: 1px 1px 0 #000;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* --- Phase 2 HUD (functional now; era chrome lands in Phase 3) --- */
+.hud-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: #2b2b28;
+  border-bottom: 2px solid #14141277;
+  font: 12px monospace;
+  color: #d9d9d0;
+  z-index: 10;
+}
+.hud-title {
+  font-weight: bold;
+  letter-spacing: 2px;
+  color: #f2d33d;
+}
+.hud-input {
+  width: 220px;
+  background: #1c1c1a;
+  border: 1px solid #5a5a52;
+  color: #d9d9d0;
+  font: 12px monospace;
+  padding: 3px 6px;
+}
+.hud-btn {
+  background: #7a7a74;
+  border: 1px solid #14141277;
+  color: #1c1c1a;
+  font: bold 12px monospace;
+  padding: 3px 10px;
+  cursor: pointer;
+}
+.hud-btn:hover {
+  background: #b8b3a0;
+}
+.hud-btn-quiet {
+  background: transparent;
+  color: #b8b3a0;
+  border-color: #5a5a52;
+}
+.hud-btn-found {
+  background: #f2d33d;
+}
+.hud-population {
+  margin-left: auto;
+  color: #f2d33d;
+  white-space: nowrap;
+}
+.hud-status {
+  color: #b8b3a0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 40vw;
+}
+.hud-status-error {
+  color: #e88a7a;
+}
+.hud-tray {
+  position: fixed;
+  top: 34px;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 6px 10px;
+  background: #232320;
+  font: 12px monospace;
+  color: #d9d9d0;
+  z-index: 10;
+}
+.hud-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #3a3a35;
+  border: 1px solid #5a5a52;
+  padding: 2px 6px;
+}
+.hud-chip-name {
+  color: #f2d33d;
+}
+.hud-chip-meta {
+  color: #b8b3a0;
+}
+.hud-chip-x {
+  background: none;
+  border: none;
+  color: #e88a7a;
+  cursor: pointer;
+  font: bold 13px monospace;
+}
+.hud-privacy {
+  width: 100%;
+  color: #8f8f85;
+  font-size: 11px;
+}
+/* --- Query panel: era grey-beveled inspector, docked right --- */
+.query-panel {
+  position: fixed;
+  top: 72px;
+  right: 0;
+  bottom: 48px;
+  width: 240px;
+  display: flex;
+  align-items: flex-start;
+  z-index: 15;
+  transition: transform 0.15s ease-out;
+  font: 12px monospace;
+}
+.query-panel.query-collapsed {
+  transform: translateX(240px);
+}
+.query-tab {
+  position: absolute;
+  left: -58px;
+  top: 8px;
+  background: #b8b3a0;
+  border-top: 2px solid #e8e4d4;
+  border-left: 2px solid #e8e4d4;
+  border-bottom: 2px solid #5a5648;
+  border-right: 2px solid #5a5648;
+  color: #2b2b28;
+  font: bold 11px monospace;
+  padding: 4px 6px;
+  cursor: pointer;
+}
+.query-chrome {
+  width: 100%;
+  max-height: 100%;
+  overflow-y: auto;
+  background: #b8b3a0;
+  border-top: 2px solid #e8e4d4;
+  border-left: 2px solid #e8e4d4;
+  border-bottom: 2px solid #5a5648;
+  border-right: 2px solid #5a5648;
+  color: #2b2b28;
+}
+.query-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 6px;
+  background: #a8a390;
+  border-bottom: 1px solid #5a5648;
+}
+.query-title {
+  font-weight: bold;
+  letter-spacing: 1px;
+  flex: 1;
+}
+.query-pin,
+.query-close {
+  background: #c9c4b4;
+  border-top: 1px solid #e8e4d4;
+  border-left: 1px solid #e8e4d4;
+  border-bottom: 1px solid #5a5648;
+  border-right: 1px solid #5a5648;
+  font: 11px monospace;
+  width: 22px;
+  height: 20px;
+  cursor: pointer;
+  padding: 0;
+}
+.query-pin-active {
+  background: #f2d33d;
+}
+.query-content {
+  padding: 6px 8px;
+}
+.query-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 1px 0;
+}
+.query-label {
+  color: #5a5648;
+}
+.query-value {
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+.query-subhead {
+  margin-top: 8px;
+  padding-bottom: 2px;
+  border-bottom: 1px solid #5a5648;
+  font-weight: bold;
+}
+.query-item {
+  padding: 1px 0;
+  overflow-wrap: anywhere;
+}
+.query-note {
+  margin-top: 8px;
+  overflow-wrap: anywhere;
+}
+.query-note-dim {
+  color: #5a5648;
+  font-size: 11px;
+}
+.query-link {
+  display: inline-block;
+  margin-top: 6px;
+  color: #2a4fd6;
+}
+.query-panel button:focus-visible,
+.query-link:focus-visible {
+  outline: 2px solid #f2d33d;
+  outline-offset: 1px;
+}
+
+/* --- Traffic speed control --- */
+.speed-bar {
+  position: fixed;
+  left: 8px;
+  bottom: 28px;
+  display: flex;
+  gap: 4px;
+  z-index: 15;
+}
+.speed-btn {
+  background: #b8b3a0;
+  border-top: 2px solid #e8e4d4;
+  border-left: 2px solid #e8e4d4;
+  border-bottom: 2px solid #5a5648;
+  border-right: 2px solid #5a5648;
+  font: 13px monospace;
+  width: 30px;
+  height: 26px;
+  cursor: pointer;
+  padding: 0;
+}
+.speed-btn-active {
+  background: #f2d33d;
+}
+.speed-btn:focus-visible {
+  outline: 2px solid #2a4fd6;
+  outline-offset: 1px;
+}
+
+.hud-drop-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #2a4fd688;
+  color: #fff;
+  font: bold 28px monospace;
+  text-shadow: 2px 2px 0 #14141277;
+  z-index: 20;
+  pointer-events: none;
+}
+
+/* --- Edit Mode (player sandbox) ---
+   The chrome must make the mode unmistakable: amber frame around the whole
+   viewport + persistent badge, so a screenshot can never pass as the honest
+   generated-from-data view. */
+.edit-badge {
+  position: fixed;
+  top: 44px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #f2a53d;
+  color: #2b2b28;
+  font: bold 12px monospace;
+  letter-spacing: 1px;
+  padding: 4px 10px;
+  border-top: 2px solid #ffd9a0;
+  border-left: 2px solid #ffd9a0;
+  border-bottom: 2px solid #7a5215;
+  border-right: 2px solid #7a5215;
+  z-index: 25;
+  display: none;
+  pointer-events: none;
+}
+.edit-frame {
+  position: fixed;
+  inset: 0;
+  border: 3px solid #f2a53d;
+  z-index: 24;
+  display: none;
+  pointer-events: none;
+}
+.hud-btn-edit-active {
+  background: #f2a53d;
+  font-weight: bold;
+}
+.edit-panel {
+  position: fixed;
+  top: 72px;
+  left: 0;
+  bottom: 88px;
+  width: 220px;
+  overflow-y: auto;
+  background: #b8b3a0;
+  border-top: 2px solid #e8e4d4;
+  border-left: 2px solid #e8e4d4;
+  border-bottom: 2px solid #5a5648;
+  border-right: 2px solid #5a5648;
+  color: #2b2b28;
+  font: 12px monospace;
+  z-index: 15;
+  display: none;
+}
+.edit-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  margin: 2px 0;
+  padding: 3px 6px;
+  background: #c9c4b4;
+  border-top: 1px solid #e8e4d4;
+  border-left: 1px solid #e8e4d4;
+  border-bottom: 1px solid #5a5648;
+  border-right: 1px solid #5a5648;
+  font: 11px monospace;
+  text-align: left;
+  cursor: pointer;
+}
+.edit-item-active {
+  background: #f2d33d;
+  font-weight: bold;
+}
+.edit-chip {
+  width: 10px;
+  height: 10px;
+  flex: none;
+  border: 1px solid #5a5648;
+}
+.edit-chip-parks {
+  background: #4c9c46;
+}
+.edit-chip-civic {
+  background: #4c6cd0;
+}
+.edit-chip-commerce {
+  background: #c9b03a;
+}
+.edit-chip-industry {
+  background: #a05a32;
+}
+.edit-chip-infra {
+  background: #7a7a7a;
+}
+.edit-chip-residential {
+  background: #b0623e;
+}
+.edit-chip-homes {
+  background: #8a5aa0;
+}
+.edit-item-name {
+  overflow-wrap: anywhere;
+}
+.edit-selection {
+  margin-top: 8px;
+}
+.edit-delete {
+  margin-top: 6px;
+  background: #d04030;
+  color: #fff;
+}
+.edit-move {
+  margin-top: 6px;
+  margin-right: 6px;
+  background: #4c6cd0;
+  color: #fff;
+}
+
+/* --- Home screen (title view) --- */
+.home-screen {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 40;
+  /* See-through vignette: the live pixel city renders beneath the title. */
+  background: linear-gradient(
+    180deg,
+    #10141bd8 0%,
+    #10141b55 26%,
+    #10141b33 55%,
+    #10141bee 100%
+  );
+  font: 14px monospace;
+  color: #e8e4d4;
+}
+.home-about-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+}
+.home-center {
+  text-align: center;
+}
+.home-title {
+  margin: 0;
+  line-height: 0;
+  animation: home-bob 3.2s ease-in-out infinite;
+}
+.home-title-px {
+  width: min(500px, 72vw);
+  image-rendering: pixelated;
+  filter: drop-shadow(0 0 14px #ffffff44);
+}
+@keyframes home-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+.home-sub {
+  margin: 6px 0 36px;
+  color: #b8b3a0;
+  letter-spacing: 2px;
+}
+.home-play {
+  background: #f2d33d;
+  color: #2b2b28;
+  font: bold 22px monospace;
+  letter-spacing: 3px;
+  padding: 14px 44px;
+  border-top: 3px solid #fff0a8;
+  border-left: 3px solid #fff0a8;
+  border-bottom: 3px solid #7a6a15;
+  border-right: 3px solid #7a6a15;
+  cursor: pointer;
+}
+.home-play {
+  animation: home-pulse 1.8s ease-in-out infinite;
+}
+@keyframes home-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 #f2d33d44;
+  }
+  50% {
+    transform: scale(1.045);
+    box-shadow: 0 0 18px 4px #f2d33d33;
+  }
+}
+.home-play:hover {
+  background: #ffe45a;
+  animation-play-state: paused;
+  transform: scale(1.045);
+}
+.home-sub {
+  text-shadow:
+    1px 1px 0 #141412,
+    -1px -1px 0 #141412,
+    1px -1px 0 #141412,
+    -1px 1px 0 #141412;
+}
+.home-mode-desc,
+.home-mode-name {
+  text-shadow: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .home-title,
+  .home-play {
+    animation: none;
+  }
+}
+.home-mode-row {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+}
+.home-mode-btn {
+  width: 240px;
+  padding: 18px 14px;
+  background: #b8b3a0;
+  color: #2b2b28;
+  border-top: 3px solid #e8e4d4;
+  border-left: 3px solid #e8e4d4;
+  border-bottom: 3px solid #5a5648;
+  border-right: 3px solid #5a5648;
+  cursor: pointer;
+  font: 12px monospace;
+}
+.home-mode-btn:hover {
+  background: #c9c4b4;
+}
+.home-mode-name {
+  font: bold 15px monospace;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+.home-mode-desc {
+  color: #5a5648;
+}
+.home-back {
+  margin-top: 18px;
+}
+.home-about-panel {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #14141288;
+}
+.home-about-chrome {
+  width: min(440px, 90vw);
+  max-height: 80vh;
+  font: 12px monospace;
+}
+.home-screen button:focus-visible {
+  outline: 3px solid #f2d33d;
+  outline-offset: 2px;
+}
+
+/* While the title screen is up, the app chrome stays out of the shot. */
+body.home-active .hud-bar,
+body.home-active .query-panel,
+body.home-active .speed-bar,
+body.home-active #hud {
+  display: none;
+}
